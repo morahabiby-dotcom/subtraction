@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Frog Hop Subtraction Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#d9f6e4;--card:#fff;--ink:#23324a;--blue:#3b82f6;--pink:#ec4899;--green:#22c55e;--yellow:#fbbf24;--orange:#fb923c;--purple:#8b5cf6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17372b;--card:#26435a;--ink:#f4f8ff}}
+:root[data-theme="dark"]{--bg:#17372b;--card:#26435a;--ink:#f4f8ff}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Fredoka','Comic Sans MS','Trebuchet MS',sans-serif;text-align:center}
+#app{max-width:640px;margin:0 auto;padding:16px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bar{flex:1;height:18px;background:#fff8;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--yellow),var(--orange));border-radius:99px;transition:width .5s}
+.pill{border:0;background:var(--card);color:var(--ink);font:inherit;font-size:22px;border-radius:99px;padding:6px 14px;cursor:pointer}
+.card{background:var(--card);border-radius:28px;padding:22px 16px;margin-top:14px;box-shadow:0 6px 0 #0002}
+h1{font-size:40px;margin:6px 0;color:var(--purple)}
+.big{font-size:84px;line-height:1}
+.tip{background:#fff3c4;color:#5a4300;border-radius:18px;padding:10px 14px;font-size:20px;margin:10px 0}
+.q{font-size:28px;font-weight:700;margin:6px 0 10px}
+.math{font-size:44px;font-weight:700;color:var(--blue)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.opt{font:inherit;font-size:36px;font-weight:700;color:#fff;border:0;border-radius:22px;padding:18px 4px;cursor:pointer;box-shadow:0 6px 0 #0003;transition:transform .1s}
+.opt:nth-child(1){background:var(--blue)}.opt:nth-child(2){background:var(--pink)}.opt:nth-child(3){background:var(--purple)}
+.opts.long{grid-template-columns:1fr}.opts.long .opt{font-size:28px;padding:14px 8px}
+.opt,.go,.pill{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.opt:active{transform:translateY(4px);box-shadow:0 2px 0 #0003}
+.opt.good{background:var(--green)!important;animation:pop .5s}
+.opt.bad{background:#9ca3af!important;animation:shake .4s}
+.opt[disabled]{cursor:default}
+.go{font:inherit;font-size:30px;font-weight:700;color:#fff;background:var(--green);border:0;border-radius:99px;padding:14px 38px;margin-top:16px;cursor:pointer;box-shadow:0 6px 0 #0003}
+.msg{font-size:26px;font-weight:700;min-height:36px;margin-top:12px}
+.frog{font-size:64px;display:inline-block}
+.hop{animation:hop .6s}
+svg{max-width:100%;height:auto}
+@keyframes pop{50%{transform:scale(1.15)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes hop{40%{transform:translateY(-34px) rotate(-10deg)}}
+canvas{position:fixed;inset:0;pointer-events:none;width:100%;height:100%}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+:focus-visible{outline:4px solid var(--yellow);outline-offset:2px}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div id="app"></div>
+<script>
+const Q=[
+{t:"Smart Guess! 🎯",q:"88 − 53 is about…",m:"90 − 50 = ?",o:[40,30,50],a:40,h:"Round each number to the nearest ten, then subtract!"},
+{t:"Smart Guess! 🎯",q:"Which is a good guess for 73 − 21?",m:"73 − 21",o:["70 − 20 = 50","70 − 40 = 30","90 − 50 = 40"],a:"70 − 20 = 50",h:"73 is close to 70. 21 is close to 20."},
+{t:"Smart Guess! 🎯",q:"61 − 27 is about…",m:"60 − 30 = ?",o:[30,70,40],a:30,h:"6 tens take away 3 tens leaves 3 tens."},
+{t:"Frog Hops! 🐸",q:"The frog hops from 47 up to 55. How far did it hop in all?",m:"55 − 47",hop:[47,50,55],o:[8,3,5],a:8,h:"Add the hops: 3 + 5 = ?"},
+{t:"Frog Hops! 🐸",q:"The frog hops from 56 up to 65. How far in all?",m:"65 − 56",hop:[56,60,65],o:[7,9,10],a:9,h:"Add the hops: 4 + 5 = ?"},
+{t:"Tens and Ones 🧊",q:"Split it! Tens first: 50 − 20 = 30. Now ones: 8 − 5 = 3. What is 58 − 25?",m:"30 + 3 = ?",o:[33,23,35],a:33,h:"Put the tens and ones back together."},
+{t:"Tens and Ones 🧊",q:"Now you try 67 − 23! Tens: 60 − 20 = 40. Ones: 7 − 3 = 4.",m:"40 + 4 = ?",o:[34,44,40],a:44,h:"4 tens and 4 ones makes…"},
+{t:"Star Challenge ⭐",q:"Is this correct? 48 kg − 37 kg = 11 kg",m:"48 − 37 = 11",o:["Yes! 👍","No 👎","Maybe 🤔"],a:"Yes! 👍",h:"8 − 7 = 1 and 40 − 30 = 10. Put them together!"}
+];
+const app=document.getElementById('app');let i=0,stars=0,tries=0,muted=false,ac;
+const cheers=["Great job! 🎉","Super! ⭐","You got it! 🌈","Hooray! 🥳","Amazing! 🚀"];
+function snd(freqs,type='sine',d=.15){if(muted)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();freqs.forEach((f,k)=>{const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;const s=ac.currentTime+k*d;g.gain.setValueAtTime(.2,s);g.gain.exponentialRampToValueAtTime(.001,s+d*1.6);o.connect(g);g.connect(ac.destination);o.start(s);o.stop(s+d*1.7)})}catch(e){}}
+const good=()=>snd([523,659,784,1047],'triangle',.11),oops=()=>snd([300,230],'sine',.18),win=()=>snd([523,659,784,659,784,1047,1319],'triangle',.14),click=()=>snd([660],'square',.06);
+function hud(){return `<div class="top"><span class="pill">⭐ ${stars}</span><div class="bar"><i style="width:${i/Q.length*100}%"></i></div><button class="pill" id="mu" aria-label="Sound on or off">${muted?'🔇':'🔊'}</button></div>`}
+function bindMu(){const b=document.getElementById('mu');if(b)b.onclick=()=>{muted=!muted;b.textContent=muted?'🔇':'🔊';click()}}
+function start(){app.innerHTML=`<div class="card"><div class="big frog">🐸</div><h1>Frog Hop Quiz!</h1><div class="tip">Hi friend! Let's play with subtraction.<br>Tap the right answer. It's okay to try again! 💚</div><button class="go" id="s">Let's go! ▶</button></div>`;document.getElementById('s').onclick=()=>{click();show()}}
+function line(p){const x=v=>40+(v-p[0])/(p[2]-p[0])*320;const mk=(a,b,l)=>`<path d="M${x(a)} 70 Q${(x(a)+x(b))/2} 20 ${x(b)} 70" fill="none" stroke="#ec4899" stroke-width="4" stroke-dasharray="8 6"/><text x="${(x(a)+x(b))/2}" y="30" font-size="22" font-weight="700" fill="#ec4899" text-anchor="middle">${l}</text>`;
+return `<svg viewBox="0 0 400 130"><line x1="20" y1="80" x2="380" y2="80" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>${p.map(v=>`<circle cx="${x(v)}" cy="80" r="8" fill="#3b82f6"/><text x="${x(v)}" y="115" font-size="26" font-weight="700" fill="currentColor" text-anchor="middle">${v}</text>`).join('')}${mk(p[0],p[1],'+'+(p[1]-p[0]))}${mk(p[1],p[2],'+'+(p[2]-p[1]))}</svg>`}
+function show(){const q=Q[i];tries=0;app.innerHTML=hud()+`<div class="card"><div class="tip">${q.t}</div><div class="q">${q.q}</div><div class="math">${q.m}</div>${q.hop?line(q.hop):''}<div class="opts${q.o.some(o=>String(o).length>4)?' long':''}">${[...q.o].sort(()=>Math.random()-.5).map(o=>`<button class="opt" data-v="${o}">${o}</button>`).join('')}</div><div class="msg" id="m"></div></div>`;bindMu();
+app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>pick(b,q))}
+function pick(b,q){const m=document.getElementById('m');
+if(b.dataset.v==String(q.a)){good();b.classList.add('good');app.querySelectorAll('.opt').forEach(x=>x.disabled=true);if(tries==0)stars++;m.innerHTML=`<span class="frog hop">🐸</span> ${cheers[i%5]}`;confetti(60);
+setTimeout(()=>{const n=document.createElement('button');n.className='go';n.textContent=i==Q.length-1?'Finish 🏆':'Next ➜';n.onclick=()=>{click();i++;i<Q.length?show():end()};b.closest('.card').appendChild(n)},500)}
+else{tries++;oops();b.classList.add('bad');b.disabled=true;m.textContent="Oops, try again! 💪 Hint: "+q.h}}
+function end(){win();confetti(220);const r=stars>=7?"Maths Superstar! 🌟":stars>=4?"Fantastic Hopper! 🐸":"Brave Learner! 💚";
+app.innerHTML=hud().replace(/width:\d+%/,'width:100%')+`<div class="card"><div class="big">🏆</div><h1>${r}</h1><div class="math">${'⭐'.repeat(stars)||'💚'}</div><div class="q">You got ${stars} out of ${Q.length} stars on your first try!</div><button class="go" id="r">Play again 🔄</button></div>`;bindMu();document.getElementById('r').onclick=()=>{click();i=0;stars=0;start()}}
+const cv=document.getElementById('fx'),cx=cv.getContext('2d');let ps=[],run=false;
+function confetti(n){cv.width=innerWidth;cv.height=innerHeight;const c=['#3b82f6','#ec4899','#fbbf24','#22c55e','#8b5cf6','#fb923c'];for(let k=0;k<n;k++)ps.push({x:innerWidth/2,y:innerHeight/3,vx:(Math.random()-.5)*14,vy:-Math.random()*14-3,s:6+Math.random()*8,c:c[k%6],l:90});if(!run){run=true;tick()}}
+function tick(){cx.clearRect(0,0,cv.width,cv.height);ps=ps.filter(p=>p.l>0);ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45;p.l--;cx.fillStyle=p.c;cx.fillRect(p.x,p.y,p.s,p.s)});if(ps.length)requestAnimationFrame(tick);else run=false}
+start();
+</script>
+</body>
+</html>
